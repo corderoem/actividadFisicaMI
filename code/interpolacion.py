@@ -4,7 +4,7 @@ from pykrige.ok3d import OrdinaryKriging3D
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-file_path = './datos-errores.xlsx' 
+file_path = 'data/datos-errores.xlsx' 
 df = pd.read_excel(file_path)
 
 data = df[['x', 'y', 'z', 'errorTotal', 'errorX', 'errorY', 'errorZ']].values
