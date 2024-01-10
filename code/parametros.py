@@ -1,95 +1,86 @@
 import pandas as pd
 import numpy as np
 from tkinter import messagebox
-from tkinter import filedialog
 
-# Función para cargar un archivo CSV
-def cargar_csv():
-    # Mostrar el cuadro de diálogo para seleccionar un archivo
-    file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
-    if file_path:
-        # Leer el archivo CSV seleccionado utilizando pandas (aquí puedes adaptar el tratamiento del archivo según tus necesidades)
-        df = pd.read_csv(file_path, header=None)  # Esto crea un DataFrame de pandas con los datos del CSV
-        # Aquí puedes trabajar con 'df', por ejemplo, mostrar los datos en la interfaz gráfica o realizar operaciones con ellos
-        print("Archivo CSV cargado exitosamente:", file_path)
-    else:
-        print("No se seleccionó ningún archivo.")
-    
+def cleaning(df):
+    df = df[0].str.split(',', expand=True)
+
+    #Eliminar columnas innecesarias 
+    #LA ULTIMA COLUMNA PENSABA QUE DEBIA SER RFoot-2, LLAMADO "NOMBRE_DEL_TAKE-RFoot-2"
+    #Ejemplo en este caso la última columna será la llamada "Skeleton10-RFoot-2", PERO NO, DEPENDE DEL CSV
+
+    columnas_a_eliminar = df.columns[185:215]  
+    # Eliminar las columnas seleccionadas del DataFrame
+    df = df.drop(columns=columnas_a_eliminar)
+
+    columnas_a_eliminar = [0, 3, 4]
+
+    # drop para eliminar las columnas por índice
+    df = df.drop(df.columns[columnas_a_eliminar], axis=1)
+
+    # Para eliminar desde la columna 5 hasta la última, saltando cada 5 columnas
+    columnas_a_eliminar = list(range(5, len(df.columns), 5))
+    df = df.drop(df.columns[columnas_a_eliminar], axis=1)
     return df
 
 
-df = cargar_csv()
+def obtener_encabezados(df):
+    encabezados =['Frames']
 
-df = df[0].str.split(',', expand=True)
+    # Iterar cada 3 columnas desde la columna 4 hasta la última
+    for i in range(5, len(df.columns), 4):
+        valor_encabezado = df.iloc[5, i]
+        encabezados.append(valor_encabezado)
 
-#Eliminar columnas innecesarias 
-#LA ULTIMA COLUMNA PENSABA QUE DEBIA SER RFoot-2, LLAMADO "NOMBRE_DEL_TAKE-RFoot-2"
-#Ejemplo en este caso la última columna será la llamada "Skeleton10-RFoot-2", PERO NO, DEPENDE DEL CSV
+    return encabezados
 
-columnas_a_eliminar = df.columns[185:215]  
-# Eliminar las columnas seleccionadas del DataFrame
-df = df.drop(columns=columnas_a_eliminar)
+def obtener_patron(encabezados):
+    # Encontrar el primer elemento que sigue a 'Frames'
+    patron = None
+    for elemento in encabezados:
+        if elemento.startswith('Frames'):
+            continue
+        if 'Marker' in elemento:
+            break
+        if '-' in elemento:
+            patron = elemento.split('-')[0]  # Tomar la parte antes del primer '-', ese sería el patron
+    
+    return patron
 
-columnas_a_eliminar = [0, 3, 4]
-
-# drop para eliminar las columnas por índice
-df = df.drop(df.columns[columnas_a_eliminar], axis=1)
-
-# Para eliminar desde la columna 5 hasta la última, saltando cada 5 columnas
-columnas_a_eliminar = list(range(5, len(df.columns), 5))
-df = df.drop(df.columns[columnas_a_eliminar], axis=1)
-
-#Finalización del cleaning del CSV
-
-#CSV para el video
-df2 = df.copy()
-#df2.to_csv('ejemploactividad.csv', index=False)
-
-def obtenerdata():
-    return df2
-
-encabezados =['Frames']
-
-# Iterar cada 3 columnas desde la columna 4 hasta la última
-for i in range(5, len(df2.columns), 4):
-    valor_encabezado = df2.iloc[5, i]
-    encabezados.append(valor_encabezado)
-
-# Encontrar el primer elemento que sigue a 'Frames'
-patron = None
-marcadores= []
-for elemento in encabezados:
-    if elemento.startswith('Frames'):
-        continue
-    if 'Marker' in elemento:
-        break
-    if '-' in elemento:
-        patron = elemento.split('-')[0]  # Tomar la parte antes del primer '-', ese sería el patron
-        
-    if patron in elemento:
-        marcadores.append(elemento)
-    else:
-        print("No se pudieron generar encabezados.")
+def obtener_marcadores(patron, encabezados):
+    marcadores= []
+    for elemento in encabezados:
+        if patron in elemento:
+            marcadores.append(elemento)
+        else:
+            print("No se pudo generar lista de marcadores.")
+    return marcadores
 
 
 #lista de pivotes
-lista_pivotes = []
-for marca in marcadores:
-    if marca == patron + "-Hip-1" or  marca == patron + "-Hip-2" or  marca == patron + "-Hip-3"or  marca == patron + "-Hip-4":
-        lista_pivotes.append(marca)
+def lista_pivotes(patron, marcadores):
+    lista_pivotes = []
+    for marca in marcadores:
+        if marca == patron + "-Hip-1" or  marca == patron + "-Hip-2" or  marca == patron + "-Hip-3"or  marca == patron + "-Hip-4":
+            lista_pivotes.append(marca)
+    return lista_pivotes
 
 #lista de vectores 1 para la cadera
-lista_vector1 = []
-for marca in marcadores:
-    if marca == patron + "-RShoulder-1" or  marca == patron + "-RShoulder-2" or  marca == patron + "-LShoulder-1"or  marca == patron + "-LShoulder-2":
-        lista_vector1.append(marca)
+def lista_vector1(patron, marcadores):
+    lista_vector1 = []
+    for marca in marcadores:
+        if marca == patron + "-RShoulder-1" or  marca == patron + "-RShoulder-2" or  marca == patron + "-LShoulder-1"or  marca == patron + "-LShoulder-2":
+            lista_vector1.append(marca)
+    return lista_vector1
 
 #lista de vectores 2 para la cadera
-lista_vector2 = []
-for marca in marcadores:
-    if marca == patron + "-RThigh-1" or  marca == patron + "-RThigh-2" or  marca == patron + "-LThigh-1"or  marca == patron + "-LThigh-2":
-        lista_vector2.append(marca)
+def lista_vector2(patron, marcadores):
+    lista_vector2 = []
+    for marca in marcadores:
+        if marca == patron + "-RThigh-1" or  marca == patron + "-RThigh-2" or  marca == patron + "-LThigh-1"or  marca == patron + "-LThigh-2":
+            lista_vector2.append(marca)
+    return lista_vector2
 
 
 #FUNCIONES DEL CALCULO DE PARAMETROS
@@ -216,6 +207,7 @@ def calcular_angulo(diccionario_pivote, diccionario_vector1, diccionario_vector2
     
     return angulo_grados
 
+# #Calculo de errores
 
 
 def error_desplazamiento(x1, y1, z1, x2, y2, z2, delta_x1, delta_y1, delta_z1, delta_x2, delta_y2, delta_z2):
@@ -257,19 +249,6 @@ def error_aceleracion(velocidad, tiempo_inicial, tiempo_final, delta_velocidad):
     return error
  
 
-
-def error_vector(delta_x1, delta_x2):
-    error = ((delta_x1)**2 + (delta_x2)**2)**0.5
-    return error
-
-
-
-def error_productopunto(x1, y1, z1, x2, y2, z2, delta_x1, delta_y1, delta_z1, delta_x2, delta_y2, delta_z2):
-    error = ((x2*delta_x1)**2 + (x1*delta_x2)**2 + (y2*delta_y1)**2 + (y1*delta_y2)**2 + 
-             (z2*delta_z1)**2 + (z1*delta_z2)**2)**0.5
-    return error
-
-
 def obtener_vector(diccionario):
     # Quitar el último elemento de cada lista del diccionario (eliminar el tiempo)
     dic = diccionario.copy()
@@ -280,6 +259,18 @@ def obtener_vector(diccionario):
     vector = np.array(list(dic.values())).flatten()
 
     return vector
+
+
+def error_vector(delta_x1, delta_x2,delta_y1,delta_y2,delta_z1,delta_z2):
+    error = ((delta_x1)**2 + (delta_x2)**2+ (delta_y1)**2+ (delta_y2)**2+ (delta_z1)**2+ (delta_z2)**2)**0.5
+    return error
+
+
+
+def error_productopunto(x1, y1, z1, x2, y2, z2, delta_x1, delta_y1, delta_z1, delta_x2, delta_y2, delta_z2):
+    error = ((x2*delta_x1)**2 + (x1*delta_x2)**2 + (y2*delta_y1)**2 + (y1*delta_y2)**2 + 
+             (z2*delta_z1)**2 + (z1*delta_z2)**2)**0.5
+    return error
 
 
 

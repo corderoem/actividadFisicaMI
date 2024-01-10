@@ -4,7 +4,7 @@ from pykrige.ok3d import OrdinaryKriging3D
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-file_path = 'data/datos-errores.xlsx' 
+file_path = './datos-errores.xlsx' 
 df = pd.read_excel(file_path)
 
 data = df[['x', 'y', 'z', 'errorTotal', 'errorX', 'errorY', 'errorZ']].values
@@ -24,20 +24,20 @@ modelo_krigingY = crear_modelo_kriging(data[:, 0], data[:, 1], data[:, 2], data[
 modelo_krigingZ = crear_modelo_kriging(data[:, 0], data[:, 1], data[:, 2], data[:, 6])
 modelo_krigingTotal = crear_modelo_kriging(data[:, 0], data[:, 1], data[:, 2], data[:, 3])
 
-new_x = float(input("Ingrese la coordenada x: "))
-new_y = float(input("Ingrese la coordenada y: "))
-new_z = float(input("Ingrese la coordenada z: "))
+# new_x = float(input("Ingrese la coordenada x: "))
+# new_y = float(input("Ingrese la coordenada y: "))
+# new_z = float(input("Ingrese la coordenada z: "))
 
-# Predicciones de errores en cada eje utilizando Kriging
-errorX_interpolado, _ = modelo_krigingX.execute('grid', [new_x], [new_y], [new_z])
-errorY_interpolado, _ = modelo_krigingY.execute('grid', [new_x], [new_y], [new_z])
-errorZ_interpolado, _ = modelo_krigingZ.execute('grid', [new_x], [new_y], [new_z])
-errorTotal_interpolado, _ = modelo_krigingTotal.execute('grid', [new_x], [new_y], [new_z])
+def calcular_error(new_x,new_y,new_z):
+    # Predicciones de errores en cada eje utilizando Kriging
+    errorX_interpolado, _ = modelo_krigingX.execute('grid', [new_x], [new_y], [new_z])
+    errorY_interpolado, _ = modelo_krigingY.execute('grid', [new_x], [new_y], [new_z])
+    errorZ_interpolado, _ = modelo_krigingZ.execute('grid', [new_x], [new_y], [new_z])
+    errorTotal_interpolado, _ = modelo_krigingTotal.execute('grid', [new_x], [new_y], [new_z])
 
-print(f"Error X interpolado en ({new_x}, {new_y}, {new_z}): {errorX_interpolado[0][0]}")
-print(f"Error Y interpolado en ({new_x}, {new_y}, {new_z}): {errorY_interpolado[0][0]}")
-print(f"Error Z interpolado en ({new_x}, {new_y}, {new_z}): {errorZ_interpolado[0][0]}")
-print(f"Error total interpolado en ({new_x}, {new_y}, {new_z}): {errorTotal_interpolado[0][0]}")
+    return errorX_interpolado, errorY_interpolado, errorZ_interpolado,errorTotal_interpolado 
+
+
 '''
 data = df[['x', 'y', 'z', 'error']].values
 
