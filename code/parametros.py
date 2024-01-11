@@ -2,17 +2,14 @@ import pandas as pd
 import numpy as np
 from tkinter import messagebox
 
-
+#El cleaning funciona para un Rigid Body de 36 marcadores, si se usa mas marcadores modificar 
 def cleaning(df):
     df = df[0].str.split(',', expand=True)
 
     #Eliminar columnas innecesarias 
-    #LA ULTIMA COLUMNA PENSABA QUE DEBIA SER RFoot-2, LLAMADO "NOMBRE_DEL_TAKE-RFoot-2"
-    #Ejemplo en este caso la última columna será la llamada "Skeleton10-RFoot-2", PERO NO, DEPENDE DEL CSV
-
-    columnas_a_eliminar = df.columns[185:]  
+    columnas_innecesarias = df.columns[185:]  
     # Eliminar las columnas seleccionadas del DataFrame
-    df = df.drop(columns=columnas_a_eliminar)
+    df = df.drop(columns=columnas_innecesarias)
 
     columnas_a_eliminar = [0, 3, 4]
 
@@ -53,8 +50,7 @@ def obtener_marcadores(patron, encabezados):
     for elemento in encabezados:
         if patron in elemento:
             marcadores.append(elemento)
-        else:
-            print("No se pudo generar lista de marcadores.")
+
     return marcadores
 
 
