@@ -10,7 +10,7 @@ def cleaning(df):
     #LA ULTIMA COLUMNA PENSABA QUE DEBIA SER RFoot-2, LLAMADO "NOMBRE_DEL_TAKE-RFoot-2"
     #Ejemplo en este caso la última columna será la llamada "Skeleton10-RFoot-2", PERO NO, DEPENDE DEL CSV
 
-    columnas_a_eliminar = df.columns[185:215]  
+    columnas_a_eliminar = df.columns[185:]  
     # Eliminar las columnas seleccionadas del DataFrame
     df = df.drop(columns=columnas_a_eliminar)
 
@@ -30,7 +30,7 @@ def obtener_encabezados(df):
 
     # Iterar cada 3 columnas desde la columna 4 hasta la última
     for i in range(5, len(df.columns), 4):
-        valor_encabezado = df.iloc[5, i]
+        valor_encabezado = df.iloc[100, i]
         encabezados.append(valor_encabezado)
 
     return encabezados
