@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from tkinter import messagebox
 
-#El cleaning funciona para un Rigid Body de 36 marcadores, si se usa mas marcadores modificar 
+#El cleaning funciona para un Rigid Body de 36 marcadores, si se usa mas marcadores modificar variable columnas_innecesarias
 def cleaning(df):
     df = df[0].str.split(',', expand=True)
 

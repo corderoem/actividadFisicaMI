@@ -375,7 +375,7 @@ def mostrar_modal():
     
     modal.config(bg=BACKGROUND_COLOR)
 
-    # Ejecutar la interfaz
+    # Ejecutar la interfaz 
     modal.mainloop()
 
 
