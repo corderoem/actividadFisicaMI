@@ -11,11 +11,13 @@ cuadro_desplazamiento = None
 cuadro_velocidad = None
 cuadro_aceleracion = None
 cuadro_angulo = None
-global tiempo_inicial
-global tiempo_final
+df_limpio = None
+frame_listbox = None
+nombres_marcadores = None
 
 # Función para cargar un archivo CSV
 def cargar_csv():
+
     # Mostrar el cuadro de diálogo para seleccionar un archivo
     file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
@@ -27,6 +29,28 @@ def cargar_csv():
         return df_leido
     else:
         print("No se seleccionó ningún archivo.")
+
+def mostrar_modal():
+    modal = tk.Tk()
+    modal.title("Cargar Archivo CSV")
+    modal.geometry("300x150")
+
+    mensaje = tk.Label(modal, text="Por favor, carga un archivo para comenzar.", font=("Arial", 10, "bold"), bg=BACKGROUND_COLOR)
+    mensaje.pack(pady=10, padx=5)
+
+    boton_cargar = tk.Button(modal, text="Cargar Archivo CSV", command=lambda: iniciar_interfaz(modal))
+    boton_cargar.pack(pady=5)
+
+    modal.config(bg=BACKGROUND_COLOR)
+
+    # Ejecutar la interfaz
+    modal.mainloop()
+
+
+def iniciar_interfaz(root):
+    archivo_cargado = cargar_csv()
+    if archivo_cargado is not None:
+        mostrar_interfaz(root, archivo_cargado)
 
 
 def mostrar_interfaz(root_to_destroy, archivo_cargado):
@@ -46,6 +70,8 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     container3 = tk.Frame(root,bg=BACKGROUND_COLOR)
     container3.pack(side=tk.RIGHT)
 
+    global df_limpio
+
     df_limpio = parametros.cleaning(archivo_cargado)
     print("DF LIMPIO: ",df_limpio)
     encabezados = parametros.obtener_encabezados(df_limpio)
@@ -61,7 +87,7 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
         if selected:
             index = selected[0]
             print("index: ", index)
-            marcador = listbox.get(index)
+            marcador = patron + "-" + listbox.get(index)
             cuadro_marcador.config(text=marcador)  # Actualizar el cuadro_marcador
             print("Opción seleccionada:", marcador)  
 
@@ -75,14 +101,20 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     # Label
     label_selec_marcador = tk.Label(container1, text="Seleccionar marcador: ",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
     label_selec_marcador.pack(pady=5)
-
+    
+    global frame_listbox
     # Frame para contener el Listbox con Scrollbar (dentro del contenedor)
     frame_listbox = tk.Frame(container1,bg=BACKGROUND_COLOR)
     frame_listbox.pack(pady=5)
 
     # Crear el Listbox con Scrollbar (dentro del contenedor)
+    # global listbox
+    global nombres_marcadores
     listbox = tk.Listbox(frame_listbox, selectmode=tk.SINGLE, height=10)
-    for item in marcadores:
+    nombres_marcadores = [elemento.replace(patron+"-", "") for elemento in marcadores]
+    print(nombres_marcadores)
+    for item in nombres_marcadores:
+        print(item)
         listbox.insert(tk.END, item)
     listbox.pack(side=tk.LEFT, fill=tk.BOTH)
 
@@ -139,10 +171,9 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
             print(f"Asegúrese de escoger un marcador")  
 
     def calcular_angulo():
-
-        marcador_pivote = select_pivote.get()
-        marcador_vector1 = select_vector1.get()
-        marcador_vector2 = select_vector2.get()
+        marcador_pivote = patron + "-" + select_pivote.get()
+        marcador_vector1 = patron + "-" + select_vector1.get()
+        marcador_vector2 = patron + "-" + select_vector2.get()
         tiempo = entry_tiempo_angulo.get()
 
         pivote = parametros.obtener_datos_marcador_tiempo(df_limpio, marcador_pivote ,tiempo)
@@ -292,11 +323,12 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
     #lista de los marcadores que seran pivote
     marcadores_pivote = parametros.lista_pivotes(patron,marcadores)
+    pivotes = [elemento.replace(patron+"-", "") for elemento in marcadores_pivote]
 
     # Select pivote
     select_pivote = tk.StringVar(root)
-    select_pivote.set(marcadores_pivote[0])  # Opción por defecto
-    dropdown3 = tk.OptionMenu(seccion_abajo, select_pivote, *marcadores_pivote)
+    select_pivote.set(pivotes[0])  # Opción por defecto
+    dropdown3 = tk.OptionMenu(seccion_abajo, select_pivote, *pivotes)
     dropdown3.pack(pady=5)
 
     # Label que indica al usuario (dentro del contenedor)
@@ -305,11 +337,12 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
     #lista de pivotes
     marcadores_vector1 = parametros.lista_vector1(patron, marcadores)
+    vectores_1 = [elemento.replace(patron+"-", "") for elemento in marcadores_vector1]
 
     # Select vector 1
     select_vector1 = tk.StringVar(root)
-    select_vector1.set(marcadores_vector1[0])  # Opción por defecto
-    dropdown3 = tk.OptionMenu(seccion_abajo, select_vector1, *marcadores_vector1)
+    select_vector1.set(vectores_1[0])  # Opción por defecto
+    dropdown3 = tk.OptionMenu(seccion_abajo, select_vector1, *vectores_1)
     dropdown3.pack(padx=5)
 
     # Label que indica al usuario (dentro del contenedor)
@@ -317,11 +350,12 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     label_vector2.pack(padx=10)
 
     marcadores_vector2 = parametros.lista_vector2(patron, marcadores)
+    vectores_2 = [elemento.replace(patron+"-", "") for elemento in marcadores_vector2]
 
     # Select vector 2
     select_vector2 = tk.StringVar(root)
-    select_vector2.set(marcadores_vector2[0])  # Opción por defecto
-    dropdown3 = tk.OptionMenu(seccion_abajo, select_vector2, *marcadores_vector2)
+    select_vector2.set(vectores_2[0])  # Opción por defecto
+    dropdown3 = tk.OptionMenu(seccion_abajo, select_vector2, *vectores_2)
     dropdown3.pack(pady=5)
 
     # Label "Aceleración" y cuadro de texto (puede estar vacío o con un valor inicial)
@@ -361,28 +395,6 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     # Ejecutar la interfaz
     root.mainloop()
 
-
-def mostrar_modal():
-    modal = tk.Tk()
-    modal.title("Cargar Archivo CSV")
-    modal.geometry("300x150")
-
-    mensaje = tk.Label(modal, text="Por favor, carga un archivo para comenzar.",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
-    mensaje.pack(pady=10, padx=5)
-
-    boton_cargar = tk.Button(modal, text="Cargar Archivo CSV", command=lambda: iniciar_interfaz(modal))
-    boton_cargar.pack(pady=5)
-    
-    modal.config(bg=BACKGROUND_COLOR)
-
-    # Ejecutar la interfaz 
-    modal.mainloop()
-
-
-def iniciar_interfaz(root):
-    archivo_cargado = cargar_csv()
-    if archivo_cargado is not None:
-        mostrar_interfaz(root, archivo_cargado)
 
 # Mostrar el pop-up inicial para cargar el archivo CSV
 mostrar_modal()
