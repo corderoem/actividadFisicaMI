@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, font, ttk
 import pandas as pd
 import parametros
 import interpolacion
@@ -14,6 +14,15 @@ cuadro_angulo = None
 df_limpio = None
 frame_listbox = None
 nombres_marcadores = None
+
+
+def centrar_ventana(ventana,aplicacion_ancho,aplicacion_largo):    
+    pantall_ancho = ventana.winfo_screenwidth()
+    pantall_largo = ventana.winfo_screenheight()
+    x = int((pantall_ancho/2) - (aplicacion_ancho/2))
+    y = int((pantall_largo/2) - (aplicacion_largo/2))
+    return ventana.geometry(f"{aplicacion_ancho}x{aplicacion_largo}+{x}+{y}")
+
 
 # Función para cargar un archivo CSV
 def cargar_csv():
@@ -32,13 +41,23 @@ def cargar_csv():
 
 def mostrar_modal():
     modal = tk.Tk()
-    modal.title("Cargar Archivo CSV")
-    modal.geometry("300x150")
+    centrar_ventana(modal,400,200)
+    modal.title("Proyecto Halterofilia")
+    
+    container = tk.Frame(modal,bg=BACKGROUND_COLOR)
+    container.pack(fill='x', expand=True)
 
-    mensaje = tk.Label(modal, text="Por favor, carga un archivo para comenzar.", font=("Arial", 10, "bold"), bg=BACKGROUND_COLOR)
-    mensaje.pack(pady=10, padx=5)
+    mensaje = tk.Label(container, text="Por favor, carga un archivo CSV para comenzar.", font=("Arial", 11, "bold"), bg=BACKGROUND_COLOR)
+    mensaje.pack(pady=5, padx=5)
 
-    boton_cargar = tk.Button(modal, text="Cargar Archivo CSV", command=lambda: iniciar_interfaz(modal))
+    # Crear un objeto Style para usarlo en el botón
+    style = ttk.Style()
+
+    # Establecer el estilo del botón
+    style.configure('BotonEstilo.TButton', foreground='black', background='#4caf50', font=('Arial', 9, 'bold'))
+
+    # Crear el botón con el estilo personalizado
+    boton_cargar = ttk.Button(container, text="Cargar Archivo", command=lambda: iniciar_interfaz(modal), style='BotonEstilo.TButton')
     boton_cargar.pack(pady=5)
 
     modal.config(bg=BACKGROUND_COLOR)
@@ -59,27 +78,29 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     # Crear la ventana principal
     root = tk.Tk()
     root.title("Halterofilia")
+    centrar_ventana(root, 820,650)
 
     # Crear los contenedores
+    container_top = tk.Frame(root,bg="#1f2329",  height= 10)
+    container_top.pack(side=tk.TOP, fill='both')
+
     container1 = tk.Frame(root,bg=BACKGROUND_COLOR)
-    container1.pack(side=tk.LEFT)
+    container1.pack(side=tk.LEFT, fill='x', expand=True)
 
     container2 = tk.Frame(root,bg=BACKGROUND_COLOR)
-    container2.pack(side=tk.LEFT)
+    container2.pack(side=tk.LEFT, fill='x', expand=True)
 
     container3 = tk.Frame(root,bg=BACKGROUND_COLOR)
-    container3.pack(side=tk.RIGHT)
+    container3.pack(side=tk.RIGHT, fill='x', expand=True)
 
     global df_limpio
+    font_awesome = font.Font(family='FontAwesome', size=12)
+
 
     df_limpio = parametros.cleaning(archivo_cargado)
-    print("DF LIMPIO: ",df_limpio)
     encabezados = parametros.obtener_encabezados(df_limpio)
-    print("ENCABEZADOS: ",encabezados)
     patron = parametros.obtener_patron(encabezados)
-    print("PATRON", patron)
     marcadores = parametros.obtener_marcadores(patron, encabezados)
-    print('MARCADORES: ', marcadores)
 
     def on_select(event):
         global marcador 
@@ -91,30 +112,27 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
             cuadro_marcador.config(text=marcador)  # Actualizar el cuadro_marcador
             print("Opción seleccionada:", marcador)  
 
-    label_archivo_cargado = tk.Label(container1, text="Archivo leido",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
-    label_archivo_cargado.pack(side=tk.TOP)
+    label_archivo_cargado = tk.Label(container_top, text="Subir nuevo archivo ",font=("Arial", 10, "bold"),bg="#1f2329", fg="white")
+    label_archivo_cargado.pack(pady=5,side=tk.LEFT)
 
     # Botón para cargar el archivo CSV
-    cargar_archivo_btn = tk.Button(container1, text="Cargar Nuevo Archivo", command= cargar_csv)
-    cargar_archivo_btn.pack(padx=20, pady=10, side=tk.TOP)
+    cargar_archivo_btn = tk.Button(container_top, text="\uf093", command= cargar_csv)
+    cargar_archivo_btn.pack(side=tk.LEFT)
 
     # Label
-    label_selec_marcador = tk.Label(container1, text="Seleccionar marcador: ",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
-    label_selec_marcador.pack(pady=5)
+    label_selec_marcador = tk.Label(container1, text="Seleccionar marcador: ",font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
+    label_selec_marcador.pack()
     
     global frame_listbox
     # Frame para contener el Listbox con Scrollbar (dentro del contenedor)
     frame_listbox = tk.Frame(container1,bg=BACKGROUND_COLOR)
-    frame_listbox.pack(pady=5)
+    frame_listbox.pack(pady=6)
 
     # Crear el Listbox con Scrollbar (dentro del contenedor)
-    # global listbox
     global nombres_marcadores
-    listbox = tk.Listbox(frame_listbox, selectmode=tk.SINGLE, height=10)
+    listbox = tk.Listbox(frame_listbox, selectmode=tk.SINGLE, height=15)
     nombres_marcadores = [elemento.replace(patron+"-", "") for elemento in marcadores]
-    print(nombres_marcadores)
     for item in nombres_marcadores:
-        print(item)
         listbox.insert(tk.END, item)
     listbox.pack(side=tk.LEFT, fill=tk.BOTH)
 
@@ -129,7 +147,6 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     # Crear un nuevo Frame para los Entry (dentro del contenedor)
     frame_entry = tk.Frame(container1,bg=BACKGROUND_COLOR)
     frame_entry.pack()
-
 
     def calcular_parametros():
 
@@ -215,9 +232,8 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
         print(f"El ángulo entre los vectores es: {angulo} grados")
 
-
     # Label para el rango de tiempo (dentro del nuevo Frame)
-    label_tiempo = tk.Label(frame_entry, text="Ingresar rango de tiempo: ",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_tiempo = tk.Label(frame_entry, text="Ingresar rango de tiempo: ",font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
     label_tiempo.pack(side=tk.TOP, padx=10, pady=5)
 
     # Funciones para manejar los eventos de clic y salida de los Entry
@@ -230,7 +246,6 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
         if not entry.get():
             entry.insert(0, entry.default_text)
             entry['fg'] = 'grey'
-
 
     # Frame para los Entry (dentro del nuevo Frame)
     frame_labels_tiempo = tk.Frame(frame_entry,bg=BACKGROUND_COLOR)
@@ -256,7 +271,6 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     entry_tiempo_inicial.bind("<FocusOut>", lambda event: restaurar_texto_inicial(event, entry_tiempo_inicial))
     entry_tiempo_inicial.pack(side=tk.LEFT, padx=5)
 
-
     entry_tiempo_final = tk.Entry(frame_entry_tiempo, fg='grey', width=15)
     entry_tiempo_final.default_text = 'min:seg:mili seg'  # Texto predeterminado
     entry_tiempo_final.insert(0, entry_tiempo_final.default_text)
@@ -264,16 +278,13 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     entry_tiempo_final.bind("<FocusOut>", lambda event: restaurar_texto_inicial(event, entry_tiempo_final))
     entry_tiempo_final.pack(side=tk.LEFT, padx=5)
 
-
     # Botón "Enviar" para establecer el rango de tiempo (dentro del contenedor)
     boton_calcular = tk.Button(container1, text="Calcular parámetros", command=calcular_parametros, relief=tk.RAISED)
     boton_calcular.pack(pady=10)
 
-    # Segundo contenedor para el video
     # Botón para actualizar el video
     ver_video_button = tk.Button(container2, text="Ver Video")
     ver_video_button.pack(padx=100)
-
 
     # Tercer contenedor dividido en dos secciones
     seccion_arriba = tk.Frame(container3,bg=BACKGROUND_COLOR)
@@ -284,41 +295,39 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
 
     # Label "Parámetros" en la sección de arriba
-    label_parametros = tk.Label(seccion_arriba, text="Parámetros", font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_parametros = tk.Label(seccion_arriba, text="Parámetros", font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
     label_parametros.pack(pady= 10)
 
     # Label "Marcador" y cuadro de texto con la selección del usuario
-    label_marcador = tk.Label(seccion_arriba, text="Marcador:",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_marcador = tk.Label(seccion_arriba, text="Marcador:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_marcador.pack()
     cuadro_marcador = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_marcador.pack()
 
-
     # Label "Desplazamiento" y cuadro de texto para mostrar el resultado del cálculo
-    label_desplazamiento = tk.Label(seccion_arriba, text="Desplazamiento:",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_desplazamiento = tk.Label(seccion_arriba, text="Desplazamiento:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_desplazamiento.pack()
     cuadro_desplazamiento = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)  # Mostrar el resultado
     cuadro_desplazamiento.pack()
 
     # Label "Velocidad" y cuadro de texto (puede estar vacío o con un valor inicial)
-    label_velocidad = tk.Label(seccion_arriba, text="Velocidad:",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_velocidad = tk.Label(seccion_arriba, text="Velocidad:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_velocidad.pack()
     cuadro_velocidad = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_velocidad.pack()
 
     # Label "Aceleración" y cuadro de texto (puede estar vacío o con un valor inicial)
-    label_aceleracion = tk.Label(seccion_arriba, text="Aceleración:",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_aceleracion = tk.Label(seccion_arriba, text="Aceleración:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_aceleracion.pack()
     cuadro_aceleracion = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_aceleracion.pack()
 
-
     # Label "Angulos" en la sección de arriba
-    label_parametros = tk.Label(seccion_abajo, text="Ángulos", font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_parametros = tk.Label(seccion_abajo, text="Ángulos", font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
     label_parametros.pack(pady=5)
 
     # Label que indica al usuario (dentro del contenedor)
-    label_pivote = tk.Label(seccion_abajo, text="Seleccionar pivote: ",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_pivote = tk.Label(seccion_abajo, text="Seleccionar pivote: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_pivote.pack(padx=10)
 
     #lista de los marcadores que seran pivote
@@ -332,38 +341,34 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     dropdown3.pack(pady=5)
 
     # Label que indica al usuario (dentro del contenedor)
-    label_vector1 = tk.Label(seccion_abajo, text="Seleccionar vector 1: ",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_vector1 = tk.Label(seccion_abajo, text="Seleccionar vector 1: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_vector1.pack(padx=10)
 
     #lista de pivotes
     marcadores_vector1 = parametros.lista_vector1(patron, marcadores)
     vectores_1 = [elemento.replace(patron+"-", "") for elemento in marcadores_vector1]
 
-    # Select vector 1
+    # VECTORES
     select_vector1 = tk.StringVar(root)
     select_vector1.set(vectores_1[0])  # Opción por defecto
     dropdown3 = tk.OptionMenu(seccion_abajo, select_vector1, *vectores_1)
     dropdown3.pack(padx=5)
 
-    # Label que indica al usuario (dentro del contenedor)
-    label_vector2 = tk.Label(seccion_abajo, text="Seleccionar vector 2: ",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_vector2 = tk.Label(seccion_abajo, text="Seleccionar vector 2: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_vector2.pack(padx=10)
 
     marcadores_vector2 = parametros.lista_vector2(patron, marcadores)
     vectores_2 = [elemento.replace(patron+"-", "") for elemento in marcadores_vector2]
 
-    # Select vector 2
     select_vector2 = tk.StringVar(root)
     select_vector2.set(vectores_2[0])  # Opción por defecto
     dropdown3 = tk.OptionMenu(seccion_abajo, select_vector2, *vectores_2)
     dropdown3.pack(pady=5)
 
-    # Label "Aceleración" y cuadro de texto (puede estar vacío o con un valor inicial)
-    label_angulo = tk.Label(seccion_abajo, text="Ángulo:",font=("Arial", 10, "bold"),bg=BACKGROUND_COLOR)
+    label_angulo = tk.Label(seccion_abajo, text="Ángulo:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_angulo.pack(padx = 10)
     cuadro_angulo = tk.Label(seccion_abajo, text="",bg=BACKGROUND_COLOR)
     cuadro_angulo.pack(pady=5)
-
 
     frame_angulo = tk.Frame(container3,bg=BACKGROUND_COLOR)
     frame_angulo.pack()
@@ -372,11 +377,10 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     frame_entry_angulo = tk.Frame(frame_angulo,bg=BACKGROUND_COLOR)
     frame_entry_angulo.pack(padx=10, pady=5)
 
-    # Label para 'Tiempo inicial:'
     label_tiempo_angulo = tk.Label(frame_entry_angulo, text="Tiempo:",bg=BACKGROUND_COLOR)
     label_tiempo_angulo.pack(side=tk.LEFT, padx=5)
 
-    # Entradas para el tiempo inicial y final (dentro del nuevo Frame)
+    # Entradas para el tiempo 
     entry_tiempo_angulo = tk.Entry(frame_entry_angulo, fg='grey', width=15)
     entry_tiempo_angulo.default_text = 'min:seg:mili seg'  # Texto predeterminado
     entry_tiempo_angulo.insert(0, entry_tiempo_inicial.default_text)
@@ -388,13 +392,11 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     boton_angulo = tk.Button(container3, text="Calcular ángulo", command=calcular_angulo, relief=tk.RAISED)
     boton_angulo.pack(pady=10)
 
-
     # Aplicar estilos a elementos específicos
     root.config(bg=BACKGROUND_COLOR)
 
     # Ejecutar la interfaz
     root.mainloop()
-
 
 # Mostrar el pop-up inicial para cargar el archivo CSV
 mostrar_modal()
