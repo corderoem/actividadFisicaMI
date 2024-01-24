@@ -14,7 +14,7 @@ cuadro_angulo = None
 df_limpio = None
 frame_listbox = None
 nombres_marcadores = None
-
+button_style = None
 
 def centrar_ventana(ventana,aplicacion_ancho,aplicacion_largo):    
     pantall_ancho = ventana.winfo_screenwidth()
@@ -51,10 +51,11 @@ def mostrar_modal():
     mensaje.pack(pady=5, padx=5)
 
     # Crear un objeto Style para usarlo en el botón
-    style = ttk.Style()
+    global button_style
+    button_style = ttk.Style()
 
     # Establecer el estilo del botón
-    style.configure('BotonEstilo.TButton', foreground='black', background='#4caf50', font=('Arial', 9, 'bold'))
+    button_style.configure('BotonEstilo.TButton', foreground='black', background='#4caf50', font=('Arial', 9, 'bold'))
 
     # Crear el botón con el estilo personalizado
     boton_cargar = ttk.Button(container, text="Cargar Archivo", command=lambda: iniciar_interfaz(modal), style='BotonEstilo.TButton')
@@ -87,15 +88,19 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     container1 = tk.Frame(root,bg=BACKGROUND_COLOR)
     container1.pack(side=tk.LEFT, fill='x', expand=True)
 
+    frame_separador = tk.Frame(root, bg="#f0f0f0", width=2, height=root.winfo_height())
+    frame_separador.pack(side='left', fill='y', padx=5)
+
     container2 = tk.Frame(root,bg=BACKGROUND_COLOR)
     container2.pack(side=tk.LEFT, fill='x', expand=True)
+
+    frame_separador = tk.Frame(root, bg="#f0f0f0", width=2, height=root.winfo_height())
+    frame_separador.pack(side='left', fill='y', padx=5)
 
     container3 = tk.Frame(root,bg=BACKGROUND_COLOR)
     container3.pack(side=tk.RIGHT, fill='x', expand=True)
 
     global df_limpio
-    font_awesome = font.Font(family='FontAwesome', size=12)
-
 
     df_limpio = parametros.cleaning(archivo_cargado)
     encabezados = parametros.obtener_encabezados(df_limpio)
@@ -109,7 +114,7 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
             index = selected[0]
             print("index: ", index)
             marcador = patron + "-" + listbox.get(index)
-            cuadro_marcador.config(text=marcador)  # Actualizar el cuadro_marcador
+            cuadro_marcador.config(text=marcador,bg="#f0f0f0")  # Actualizar el cuadro_marcador
             print("Opción seleccionada:", marcador)  
 
     label_archivo_cargado = tk.Label(container_top, text="Subir nuevo archivo ",font=("Arial", 10, "bold"),bg="#1f2329", fg="white")
@@ -144,10 +149,6 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
     listbox.bind('<<ListboxSelect>>', on_select)
 
-    # Crear un nuevo Frame para los Entry (dentro del contenedor)
-    frame_entry = tk.Frame(container1,bg=BACKGROUND_COLOR)
-    frame_entry.pack()
-
     def calcular_parametros():
 
         tiempo_inicial = entry_tiempo_inicial.get()
@@ -177,13 +178,9 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
 
         if desplazamiento is not None:
-            print(f"El desplazamiento del marcador '{marcador}' es: {desplazamiento} m")
-            print(f"La velocidad del marcador '{marcador}' es: {velocidad} m/s")
-            print(f"La aceleración del marcador '{marcador}' es: {aceleracion} m/s^2")
-
-            cuadro_desplazamiento.config(text=str(desplazamiento)+ " \u00B1 " + str(error_desplazamiento)+ " m")
-            cuadro_velocidad.config(text=str(velocidad)+ " \u00B1 " + str(error_velocidad) +" m/s")
-            cuadro_aceleracion.config(text=str(aceleracion)+ " \u00B1 " + str(error_aceleracion) +" m/s^2")
+            cuadro_desplazamiento.config(text=str(desplazamiento)+ " \u00B1 " + str(error_desplazamiento)+ " m",bg="#f0f0f0")
+            cuadro_velocidad.config(text=str(velocidad)+ " \u00B1 " + str(error_velocidad) +" m/s",bg="#f0f0f0")
+            cuadro_aceleracion.config(text=str(aceleracion)+ " \u00B1 " + str(error_aceleracion) +" m/s^2",bg="#f0f0f0")
         else:
             print(f"Asegúrese de escoger un marcador")  
 
@@ -226,11 +223,22 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
             print("No se encontraron datos para el marcador y tiempo proporcionados.")
         
         if angulo is not None:
-            cuadro_angulo.config(text=str("{:.2f}".format(angulo))+ " \u00B1 " + str(error_angulo)+" grados")
+            cuadro_angulo.config(text=str("{:.2f}".format(angulo))+ " \u00B1 " + str(error_angulo)+" grados",bg="#f0f0f0")
         else:
             print(f"No se pudo calcular el ángulo")  
 
         print(f"El ángulo entre los vectores es: {angulo} grados")
+
+        # Label "Marcador" y cuadro de texto con la selección del usuario
+    
+    label_marcador = tk.Label(container1, text="Marcador seleccionado:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_marcador.pack(pady=(8,0))
+    cuadro_marcador = tk.Label(container1, text="",bg=BACKGROUND_COLOR)
+    cuadro_marcador.pack(pady=5)
+
+    # Nuevo Frame para los Entry (dentro del contenedor)
+    frame_entry = tk.Frame(container1,bg=BACKGROUND_COLOR)
+    frame_entry.pack()
 
     # Label para el rango de tiempo (dentro del nuevo Frame)
     label_tiempo = tk.Label(frame_entry, text="Ingresar rango de tiempo: ",font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
@@ -246,32 +254,47 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
         if not entry.get():
             entry.insert(0, entry.default_text)
             entry['fg'] = 'grey'
-
+    
+    # def validar_tiempo_input(*args):
+    #     nuevo_valor = entry_tiempo_inicial_var.get()
+    #     if len(nuevo_valor) == 2 or len(nuevo_valor) == 5:
+    #         entry_tiempo_inicial_var.set(nuevo_valor + ":")
+    #         entry_tiempo_inicial.after(1, lambda: entry_tiempo_inicial.icursor(tk.END))  # Mover el cursor al final
+    def validar_tiempo_input(entry, *args):
+        nuevo_valor = entry.get()
+        if len(nuevo_valor) == 2 or len(nuevo_valor) == 5:
+            entry.insert(tk.END, ":")  # Agregar ":" al final
+            entry.after(1, lambda: entry.icursor(tk.END))  # Mover el cursor al final
+    
     # Frame para los Entry (dentro del nuevo Frame)
     frame_labels_tiempo = tk.Frame(frame_entry,bg=BACKGROUND_COLOR)
     frame_labels_tiempo.pack(padx=10, pady=5)
 
     # Label para 'Tiempo inicial:'
-    label_tiempo_inicial = tk.Label(frame_labels_tiempo, text="Tiempo inicial:",bg=BACKGROUND_COLOR)
+    label_tiempo_inicial = tk.Label(frame_labels_tiempo, text="Tiempo inicial:",bg=BACKGROUND_COLOR,font=("Arial", 10))
     label_tiempo_inicial.pack(side=tk.LEFT, padx=5)
 
     # Label para 'Tiempo final:'
-    label_tiempo_final = tk.Label(frame_labels_tiempo, text="Tiempo final:",bg=BACKGROUND_COLOR)
-    label_tiempo_final.pack(side=tk.LEFT, padx=15)
+    label_tiempo_final = tk.Label(frame_labels_tiempo, text="Tiempo final:",bg=BACKGROUND_COLOR, font=("Arial", 10))
+    label_tiempo_final.pack(side=tk.LEFT, padx=5)
 
     # Frame para los Entry (dentro del nuevo Frame)
-    frame_entry_tiempo = tk.Frame(frame_entry,bg=BACKGROUND_COLOR)
+    frame_entry_tiempo = tk.Frame(frame_entry, bg=BACKGROUND_COLOR)
     frame_entry_tiempo.pack(padx=10, pady=5)
 
     # Entradas para el tiempo inicial y final (dentro del nuevo Frame)
-    entry_tiempo_inicial = tk.Entry(frame_entry_tiempo, fg='grey', width=15)
+    entry_tiempo_inicial_var = tk.StringVar()
+    entry_tiempo_inicial_var.trace_add("write", lambda *args: validar_tiempo_input(entry_tiempo_inicial, *args))
+    entry_tiempo_inicial = tk.Entry(frame_entry_tiempo, fg='grey', width=15, textvariable=entry_tiempo_inicial_var)
     entry_tiempo_inicial.default_text = 'min:seg:mili seg'  # Texto predeterminado
     entry_tiempo_inicial.insert(0, entry_tiempo_inicial.default_text)
     entry_tiempo_inicial.bind("<FocusIn>", lambda event: borrar_texto_inicial(event, entry_tiempo_inicial))
     entry_tiempo_inicial.bind("<FocusOut>", lambda event: restaurar_texto_inicial(event, entry_tiempo_inicial))
     entry_tiempo_inicial.pack(side=tk.LEFT, padx=5)
 
-    entry_tiempo_final = tk.Entry(frame_entry_tiempo, fg='grey', width=15)
+    entry_tiempo_final_var = tk.StringVar()
+    entry_tiempo_final_var.trace_add("write", lambda *args: validar_tiempo_input(entry_tiempo_final, *args))
+    entry_tiempo_final = tk.Entry(frame_entry_tiempo, fg='grey', width=15, textvariable=entry_tiempo_final_var)
     entry_tiempo_final.default_text = 'min:seg:mili seg'  # Texto predeterminado
     entry_tiempo_final.insert(0, entry_tiempo_final.default_text)
     entry_tiempo_final.bind("<FocusIn>", lambda event: borrar_texto_inicial(event, entry_tiempo_final))
@@ -293,38 +316,31 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     seccion_abajo = tk.Frame(container3,bg=BACKGROUND_COLOR)
     seccion_abajo.pack()
 
-
     # Label "Parámetros" en la sección de arriba
     label_parametros = tk.Label(seccion_arriba, text="Parámetros", font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
-    label_parametros.pack(pady= 10)
-
-    # Label "Marcador" y cuadro de texto con la selección del usuario
-    label_marcador = tk.Label(seccion_arriba, text="Marcador:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
-    label_marcador.pack()
-    cuadro_marcador = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
-    cuadro_marcador.pack()
+    label_parametros.pack(pady= 8)
 
     # Label "Desplazamiento" y cuadro de texto para mostrar el resultado del cálculo
     label_desplazamiento = tk.Label(seccion_arriba, text="Desplazamiento:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
-    label_desplazamiento.pack()
+    label_desplazamiento.pack(pady=(1,0))
     cuadro_desplazamiento = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)  # Mostrar el resultado
     cuadro_desplazamiento.pack()
 
     # Label "Velocidad" y cuadro de texto (puede estar vacío o con un valor inicial)
     label_velocidad = tk.Label(seccion_arriba, text="Velocidad:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
-    label_velocidad.pack()
+    label_velocidad.pack(pady=(10,0))
     cuadro_velocidad = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_velocidad.pack()
 
     # Label "Aceleración" y cuadro de texto (puede estar vacío o con un valor inicial)
     label_aceleracion = tk.Label(seccion_arriba, text="Aceleración:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
-    label_aceleracion.pack()
+    label_aceleracion.pack(pady=(10,0))
     cuadro_aceleracion = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_aceleracion.pack()
 
     # Label "Angulos" en la sección de arriba
-    label_parametros = tk.Label(seccion_abajo, text="Ángulos", font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
-    label_parametros.pack(pady=5)
+    label_angulos = tk.Label(seccion_abajo, text="Ángulos", font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
+    label_angulos.pack(pady=(22,0))
 
     # Label que indica al usuario (dentro del contenedor)
     label_pivote = tk.Label(seccion_abajo, text="Seleccionar pivote: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
@@ -373,17 +389,17 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     frame_angulo = tk.Frame(container3,bg=BACKGROUND_COLOR)
     frame_angulo.pack()
 
-    # Frame para los Entry (dentro del nuevo Frame)
     frame_entry_angulo = tk.Frame(frame_angulo,bg=BACKGROUND_COLOR)
     frame_entry_angulo.pack(padx=10, pady=5)
 
-    label_tiempo_angulo = tk.Label(frame_entry_angulo, text="Tiempo:",bg=BACKGROUND_COLOR)
+    label_tiempo_angulo = tk.Label(frame_entry_angulo, text="Tiempo:",bg=BACKGROUND_COLOR, font=("Arial", 10))
     label_tiempo_angulo.pack(side=tk.LEFT, padx=5)
 
-    # Entradas para el tiempo 
-    entry_tiempo_angulo = tk.Entry(frame_entry_angulo, fg='grey', width=15)
+    entry_tiempo_angulo_var = tk.StringVar()
+    entry_tiempo_angulo_var.trace_add("write", lambda *args: validar_tiempo_input(entry_tiempo_angulo, *args))
+    entry_tiempo_angulo = tk.Entry(frame_entry_angulo, fg='grey', width=15, textvariable=entry_tiempo_angulo_var)
     entry_tiempo_angulo.default_text = 'min:seg:mili seg'  # Texto predeterminado
-    entry_tiempo_angulo.insert(0, entry_tiempo_inicial.default_text)
+    entry_tiempo_angulo.insert(0, entry_tiempo_angulo.default_text)
     entry_tiempo_angulo.bind("<FocusIn>", lambda event: borrar_texto_inicial(event, entry_tiempo_angulo))
     entry_tiempo_angulo.bind("<FocusOut>", lambda event: restaurar_texto_inicial(event, entry_tiempo_angulo))
     entry_tiempo_angulo.pack(side=tk.LEFT, padx=5)
@@ -392,11 +408,10 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     boton_angulo = tk.Button(container3, text="Calcular ángulo", command=calcular_angulo, relief=tk.RAISED)
     boton_angulo.pack(pady=10)
 
-    # Aplicar estilos a elementos específicos
     root.config(bg=BACKGROUND_COLOR)
 
-    # Ejecutar la interfaz
     root.mainloop()
+
 
 # Mostrar el pop-up inicial para cargar el archivo CSV
 mostrar_modal()
