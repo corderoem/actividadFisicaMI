@@ -15,6 +15,7 @@ df_limpio = None
 frame_listbox = None
 nombres_marcadores = None
 button_style = None
+marcadores_pivote = None
 
 def centrar_ventana(ventana,aplicacion_ancho,aplicacion_largo):    
     pantall_ancho = ventana.winfo_screenwidth()
@@ -186,8 +187,9 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
     def calcular_angulo():
         marcador_pivote = patron + "-" + select_pivote.get()
-        marcador_vector1 = patron + "-" + select_vector1.get()
-        marcador_vector2 = patron + "-" + select_vector2.get()
+        marcador_vector1 = patron + "-" + cuadro_vector1["text"]
+        marcador_vector2 = patron + "-" + cuadro_vector2["text"]
+
         tiempo = entry_tiempo_angulo.get()
 
         pivote = parametros.obtener_datos_marcador_tiempo(df_limpio, marcador_pivote ,tiempo)
@@ -255,11 +257,6 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
             entry.insert(0, entry.default_text)
             entry['fg'] = 'grey'
     
-    # def validar_tiempo_input(*args):
-    #     nuevo_valor = entry_tiempo_inicial_var.get()
-    #     if len(nuevo_valor) == 2 or len(nuevo_valor) == 5:
-    #         entry_tiempo_inicial_var.set(nuevo_valor + ":")
-    #         entry_tiempo_inicial.after(1, lambda: entry_tiempo_inicial.icursor(tk.END))  # Mover el cursor al final
     def validar_tiempo_input(entry, *args):
         nuevo_valor = entry.get()
         if len(nuevo_valor) == 2 or len(nuevo_valor) == 5:
@@ -342,44 +339,42 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     label_angulos = tk.Label(seccion_abajo, text="Ángulos", font=("Arial", 12, "bold"),bg=BACKGROUND_COLOR)
     label_angulos.pack(pady=(22,0))
 
+    def actualizar_vectores(*args):
+        opcion_seleccionada = select_pivote.get()
+
+        valores_asociados = marcadores_pivote[opcion_seleccionada]
+
+        cuadro_vector1.config(text=valores_asociados[0])
+        cuadro_vector2.config(text=valores_asociados[1])
+
     # Label que indica al usuario (dentro del contenedor)
     label_pivote = tk.Label(seccion_abajo, text="Seleccionar pivote: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_pivote.pack(padx=10)
 
     #lista de los marcadores que seran pivote
-    marcadores_pivote = parametros.lista_pivotes(patron,marcadores)
-    pivotes = [elemento.replace(patron+"-", "") for elemento in marcadores_pivote]
+    global marcadores_pivote
+    marcadores_pivote = parametros.diccionario_pivotes()
+    lista_pivote = list(marcadores_pivote.keys())
+    #pivotes = [elemento.replace(patron+"-", "") for elemento in lista_pivote]
 
     # Select pivote
     select_pivote = tk.StringVar(root)
-    select_pivote.set(pivotes[0])  # Opción por defecto
-    dropdown3 = tk.OptionMenu(seccion_abajo, select_pivote, *pivotes)
-    dropdown3.pack(pady=5)
+    select_pivote.set(lista_pivote[0])  # Opción por defecto
+    select_pivote.trace_add('write', actualizar_vectores)  # Registrar la función de actualización
+    dropdown1 = tk.OptionMenu(seccion_abajo, select_pivote, *lista_pivote)
+    dropdown1.pack(pady=5)
 
     # Label que indica al usuario (dentro del contenedor)
-    label_vector1 = tk.Label(seccion_abajo, text="Seleccionar vector 1: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_vector1 = tk.Label(seccion_abajo, text="Vector 1: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_vector1.pack(padx=10)
+    cuadro_vector1 = tk.Label(seccion_abajo, text=marcadores_pivote[lista_pivote[0]][0], bg='lightgray')  # Mostrar el resultado
+   
+    cuadro_vector1.pack(pady=5)
 
-    #lista de pivotes
-    marcadores_vector1 = parametros.lista_vector1(patron, marcadores)
-    vectores_1 = [elemento.replace(patron+"-", "") for elemento in marcadores_vector1]
-
-    # VECTORES
-    select_vector1 = tk.StringVar(root)
-    select_vector1.set(vectores_1[0])  # Opción por defecto
-    dropdown3 = tk.OptionMenu(seccion_abajo, select_vector1, *vectores_1)
-    dropdown3.pack(padx=5)
-
-    label_vector2 = tk.Label(seccion_abajo, text="Seleccionar vector 2: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_vector2 = tk.Label(seccion_abajo, text="Vector 2: ",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_vector2.pack(padx=10)
-
-    marcadores_vector2 = parametros.lista_vector2(patron, marcadores)
-    vectores_2 = [elemento.replace(patron+"-", "") for elemento in marcadores_vector2]
-
-    select_vector2 = tk.StringVar(root)
-    select_vector2.set(vectores_2[0])  # Opción por defecto
-    dropdown3 = tk.OptionMenu(seccion_abajo, select_vector2, *vectores_2)
-    dropdown3.pack(pady=5)
+    cuadro_vector2 = tk.Label(seccion_abajo, text=marcadores_pivote[lista_pivote[0]][1], bg='lightgray')  # Mostrar el resultado
+    cuadro_vector2.pack(pady=5)
 
     label_angulo = tk.Label(seccion_abajo, text="Ángulo:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_angulo.pack(padx = 10)

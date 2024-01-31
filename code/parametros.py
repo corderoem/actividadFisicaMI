@@ -21,13 +21,12 @@ def cleaning(df):
     df = df.drop(df.columns[columnas_a_eliminar], axis=1)
     return df
 
-
 def obtener_encabezados(df):
     encabezados =['Frames']
 
     # Iterar cada 3 columnas desde la columna 4 hasta la última
     for i in range(5, len(df.columns), 4):
-        valor_encabezado = df.iloc[100, i]
+        valor_encabezado = df.iloc[5, i]
         encabezados.append(valor_encabezado)
 
     return encabezados
@@ -53,30 +52,14 @@ def obtener_marcadores(patron, encabezados):
 
     return marcadores
 
-
-#lista de pivotes
-def lista_pivotes(patron, marcadores):
-    lista_pivotes = []
-    for marca in marcadores:
-        if marca == patron + "-Hip-1" or  marca == patron + "-Hip-2" or  marca == patron + "-Hip-3"or  marca == patron + "-Hip-4":
-            lista_pivotes.append(marca)
-    return lista_pivotes
-
-#lista de vectores 1 para la cadera
-def lista_vector1(patron, marcadores):
-    lista_vector1 = []
-    for marca in marcadores:
-        if marca == patron + "-RShoulder-1" or  marca == patron + "-RShoulder-2" or  marca == patron + "-LShoulder-1"or  marca == patron + "-LShoulder-2":
-            lista_vector1.append(marca)
-    return lista_vector1
-
-#lista de vectores 2 para la cadera
-def lista_vector2(patron, marcadores):
-    lista_vector2 = []
-    for marca in marcadores:
-        if marca == patron + "-RThigh-1" or  marca == patron + "-RThigh-2" or  marca == patron + "-LThigh-1"or  marca == patron + "-LThigh-2":
-            lista_vector2.append(marca)
-    return lista_vector2
+def diccionario_pivotes():
+    dicc_pivotes = {'Hip-1': ["RShoulder-1", "RThigh-1"],
+                     'Hip-2': ["LShoulder-1", "LThigh-1"],
+                     'LThigh-2': ["LShin-2", "LThigh-1"],
+                     'RThigh-2': ["RShin-2", "RThigh-1"],
+                     'LUArm-1': ["LHand-3", "LShoulder-1"],
+                     'RUArm-1': ["RHand-3", "RShoulder-1"]}
+    return dicc_pivotes
 
 
 #FUNCIONES DEL CALCULO DE PARAMETROS
@@ -96,7 +79,6 @@ def tiempo_a_segundos(tiempo):
     tiempo_en_segundos = minutos * 60 + segundos + milisegundos / 100
 
     return tiempo_en_segundos
-
 
 def obtener_datos_marcador_tiempo(dataframe, nombre_marcador, tiempo):
 
@@ -137,8 +119,6 @@ def obtener_datos_marcador_tiempo(dataframe, nombre_marcador, tiempo):
                 nombre_marcador: [float(posicion_x), float(posicion_y), float(posicion_z), tiempo_encontrado]
             }
             return  datos_dict
-
-
 
 def calcular_parametros(posicion_inicial, posicion_final, marcador):
     
@@ -181,8 +161,6 @@ def calcular_parametros(posicion_inicial, posicion_final, marcador):
 
         return None, None, None
 
-    
-
 def calcular_angulo(diccionario_pivote, diccionario_vector1, diccionario_vector2):
     
     # Obtener los valores de las posiciones
@@ -203,9 +181,6 @@ def calcular_angulo(diccionario_pivote, diccionario_vector1, diccionario_vector2
     
     return angulo_grados
 
-# #Calculo de errores
-
-
 def error_desplazamiento(x1, y1, z1, x2, y2, z2, delta_x1, delta_y1, delta_z1, delta_x2, delta_y2, delta_z2):
     
     a = (x2-x1)**2
@@ -224,8 +199,6 @@ def error_desplazamiento(x1, y1, z1, x2, y2, z2, delta_x1, delta_y1, delta_z1, d
     
     return error_desplazamiento
 
-
-
 def error_velocidad(desplazamiento, tiempo_inicial, tiempo_final, delta_desplazamiento):
     delta_tiempo = 0.01 # error del Motive
     tiempo = tiempo_a_segundos(tiempo_final) - tiempo_a_segundos(tiempo_inicial)
@@ -233,8 +206,6 @@ def error_velocidad(desplazamiento, tiempo_inicial, tiempo_final, delta_desplaza
     error = ((delta_desplazamiento)**2/(tiempo)**2 + (desplazamiento)**2 * (delta_tiempo)**2/(tiempo)**4 )**0.5
     
     return error
-
-
 
 def error_aceleracion(velocidad, tiempo_inicial, tiempo_final, delta_velocidad):
     delta_tiempo = 0.01 # error del Motive
@@ -244,7 +215,6 @@ def error_aceleracion(velocidad, tiempo_inicial, tiempo_final, delta_velocidad):
     
     return error
  
-
 def obtener_vector(diccionario):
     # Quitar el último elemento de cada lista del diccionario (eliminar el tiempo)
     dic = diccionario.copy()
@@ -256,19 +226,14 @@ def obtener_vector(diccionario):
 
     return vector
 
-
 def error_vector(delta_x1, delta_x2,delta_y1,delta_y2,delta_z1,delta_z2):
     error = ((delta_x1)**2 + (delta_x2)**2+ (delta_y1)**2+ (delta_y2)**2+ (delta_z1)**2+ (delta_z2)**2)**0.5
     return error
-
-
 
 def error_productopunto(x1, y1, z1, x2, y2, z2, delta_x1, delta_y1, delta_z1, delta_x2, delta_y2, delta_z2):
     error = ((x2*delta_x1)**2 + (x1*delta_x2)**2 + (y2*delta_y1)**2 + (y1*delta_y2)**2 + 
              (z2*delta_z1)**2 + (z1*delta_z2)**2)**0.5
     return error
-
-
 
 def error_magnitud(vector,delta_vx, delta_vy, delta_vz):
     a = vector[0]
@@ -282,7 +247,6 @@ def error_magnitud(vector,delta_vx, delta_vy, delta_vz):
     error_mag = (expres2/expres1)**0.5
     
     return error_mag
-
 
 def error_angulo(vector1,vector2, delta_punto, delta_mag1, delta_mag2):
     punto = vector1[0] * vector2[0] + vector1[1] * vector2[1] + vector1[2] * vector2[2]
