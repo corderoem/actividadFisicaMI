@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog, font, ttk
+from bvh import Bvh
 import pandas as pd
 import parametros
 import interpolacion
+import lectorbvh
 
 #variables globales
 BACKGROUND_COLOR = "lightblue"
@@ -40,6 +42,20 @@ def cargar_csv():
     else:
         print("No se seleccionó ningún archivo.")
 
+
+def cargar_bvh():
+    # Mostrar el cuadro de diálogo para seleccionar un archivo
+    file_path = filedialog.askopenfilename(filetypes=[("BVH Files", "*.bvh")])
+
+    if file_path:
+        # Leer el archivo BVH seleccionado utilizando la biblioteca bvh
+        with open(file_path, 'r') as bvh_file:
+            bvh_data = Bvh(bvh_file.read())
+        print("Archivo BVH cargado exitosamente:", file_path)
+        return bvh_data
+    else:
+        print("No se seleccionó ningún archivo BVH.")
+
 def mostrar_modal():
     modal = tk.Tk()
     centrar_ventana(modal,400,200)
@@ -62,6 +78,10 @@ def mostrar_modal():
     boton_cargar = ttk.Button(container, text="Cargar Archivo", command=lambda: iniciar_interfaz(modal), style='BotonEstilo.TButton')
     boton_cargar.pack(pady=5)
 
+    # Crear el botón para cargar archivos BVH
+    boton_cargar_bvh = ttk.Button(container, text="Añadir Archivo BVH", command=lambda: cargar_bvh())
+    boton_cargar_bvh.pack(pady=5)
+
     modal.config(bg=BACKGROUND_COLOR)
 
     # Ejecutar la interfaz
@@ -69,12 +89,13 @@ def mostrar_modal():
 
 
 def iniciar_interfaz(root):
-    archivo_cargado = cargar_csv()
-    if archivo_cargado is not None:
-        mostrar_interfaz(root, archivo_cargado)
+    archivo_csv_cargado = cargar_csv()
+    archivo_bvh_cargado = cargar_bvh()
+    if archivo_csv_cargado is not None and archivo_bvh_cargado is not None:
+        mostrar_interfaz(root, archivo_csv_cargado)
 
 
-def mostrar_interfaz(root_to_destroy, archivo_cargado):
+def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
     root_to_destroy.destroy()  # Cerrar la ventana actual
 
     # Crear la ventana principal
@@ -103,7 +124,7 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
 
     global df_limpio
 
-    df_limpio = parametros.cleaning(archivo_cargado)
+    df_limpio = parametros.cleaning(archivo_csv_cargado)
     encabezados = parametros.obtener_encabezados(df_limpio)
     patron = parametros.obtener_patron(encabezados)
     marcadores = parametros.obtener_marcadores(patron, encabezados)
