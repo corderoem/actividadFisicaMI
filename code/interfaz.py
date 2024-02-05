@@ -2,6 +2,10 @@ import tkinter as tk
 from tkinter import filedialog, font, ttk
 from bvh import Bvh
 import pandas as pd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import cv2
+import threading
+from PIL import Image, ImageTk
 import parametros
 import interpolacion
 import lectorbvh
@@ -98,13 +102,52 @@ def iniciar_interfaz(root):
         mostrar_interfaz(root, archivo_csv_cargado)
 
 
+def reproducir(video_source, imagen_ventana, boton_pausa):
+    video = cv2.VideoCapture(video_source)
+    reproduciendo = True  # Variable para controlar el estado de reproducción
+
+    def actualizar_frame():
+        global frame_redimensionado
+        nonlocal reproduciendo
+        ret, frame_redimensionado = video.read()
+
+        if ret and reproduciendo:
+            ancho_deseado = 450
+            alto_deseado = 300
+
+            frame_redimensionado = cv2.resize(frame_redimensionado, (ancho_deseado, alto_deseado))
+
+            frame_rgb = cv2.cvtColor(frame_redimensionado, cv2.COLOR_BGR2RGB)
+            imagen_pillow = ImageTk.PhotoImage(Image.fromarray(frame_rgb))
+            imagen_ventana.configure(image=imagen_pillow)
+            imagen_ventana.imagen_pillow = imagen_pillow
+
+            # segundos = int(video.get(cv2.CAP_PROP_POS_MSEC) / 1000.0)
+            # barra_progreso.set(segundos)
+
+            imagen_ventana.after(30, actualizar_frame)  # Ajusta el tiempo de espera (30 milisegundos aquí)
+
+    actualizar_frame()
+
+    def toggle_pausa():
+        nonlocal reproduciendo
+        reproduciendo = not reproduciendo
+        if reproduciendo:
+            boton_pausa.config(text="Pausar")
+            actualizar_frame()  # Reinicia la reproducción si se reanuda
+        else:
+            boton_pausa.config(text="Reproducir")
+
+    boton_pausa.config(command=toggle_pausa)
+
+
 def mostrar_interfaz(root_to_destroy, archivo_cargado):
     root_to_destroy.destroy()  # Cerrar la ventana actual
 
     # Crear la ventana principal
     root = tk.Tk()
     root.title("Halterofilia")
-    centrar_ventana(root, 900, 600)
+    centrar_ventana(root, 1200, 600)
 
     # Crear los contenedores
     container_top = tk.Frame(root,bg="#1f2329",  height= 10)
@@ -228,9 +271,15 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
             canvas_widget_actualizar.pack()
 
             centrar_ventana(root,1350,650)
+            frame_redimensionado = cv2.resize(frame_redimensionado, (450, 300))
 
             # Mostrar el nuevo gráfico
             canvas.draw()
+
+            # Actualizar la imagen en la ventana del video
+            imagen_pillow = ImageTk.PhotoImage(Image.fromarray(frame_redimensionado))
+            imagen_ventana.configure(image=imagen_pillow)
+            imagen_ventana.imagen_pillow = imagen_pillow
 
         else:
             # Si no se ingresaron valores de tiempo, mostrar un mensaje de error
@@ -355,8 +404,20 @@ def mostrar_interfaz(root_to_destroy, archivo_cargado):
     boton_calcular.pack(pady=10)
 
     # #CONTAINER 2
-    label_grafico = tk.Label(container2, text="Gráfico", font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
-    label_grafico.pack(pady= 8)
+    # Uso en tu código
+    global imagen_ventana
+    video_source = './animacion.mp4'  # Reemplaza con la ruta de tu video
+    imagen_ventana = tk.Label(container2)
+    imagen_ventana.pack()
+
+    boton_pausa = tk.Button(container2, text="Pausar", command=lambda: None)
+    boton_pausa.pack(side=tk.BOTTOM)
+
+    # barra_progreso = ttk.Scale(container2, from_=0, to=0, orient=tk.HORIZONTAL, length=640)
+    # barra_progreso.pack(side=tk.BOTTOM)
+
+    thread_reproducir = threading.Thread(target=reproducir, args=(video_source, imagen_ventana, boton_pausa))
+    thread_reproducir.start()
 
     # Tercer contenedor dividido en dos secciones
     seccion_arriba = tk.Frame(container3,bg=BACKGROUND_COLOR)
