@@ -98,13 +98,13 @@ def iniciar_interfaz(root):
         mostrar_interfaz(root, archivo_csv_cargado)
 
 
-def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
+def mostrar_interfaz(root_to_destroy, archivo_cargado):
     root_to_destroy.destroy()  # Cerrar la ventana actual
 
     # Crear la ventana principal
     root = tk.Tk()
     root.title("Halterofilia")
-    centrar_ventana(root, 820,650)
+    centrar_ventana(root, 900, 600)
 
     # Crear los contenedores
     container_top = tk.Frame(root,bg="#1f2329",  height= 10)
@@ -127,7 +127,7 @@ def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
 
     global df_limpio
 
-    df_limpio = parametros.cleaning(archivo_csv_cargado)
+    df_limpio = parametros.cleaning(archivo_cargado)
     encabezados = parametros.obtener_encabezados(df_limpio)
     patron = parametros.obtener_patron(encabezados)
     marcadores = parametros.obtener_marcadores(patron, encabezados)
@@ -174,8 +174,10 @@ def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
 
     listbox.bind('<<ListboxSelect>>', on_select)
 
-    def calcular_parametros():
+    canvas_frame = tk.Frame(container2, bg=BACKGROUND_COLOR)
+    canvas_frame.pack(side=tk.BOTTOM,pady=(0,5))
 
+    def calcular_parametros():
         tiempo_inicial = entry_tiempo_inicial.get()
         tiempo_final = entry_tiempo_final.get()
 
@@ -208,6 +210,32 @@ def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
             cuadro_aceleracion.config(text=str(aceleracion)+ " \u00B1 " + str(error_aceleracion) +" m/s^2",bg="#f0f0f0")
         else:
             print(f"Asegúrese de escoger un marcador")  
+
+                # Verificar si se han ingresado valores de tiempo
+            
+        if tiempo_inicial and tiempo_final:
+            # Calcular parámetros y obtener el nuevo gráfico
+            fig = parametros.graficar_parametros(
+                df_limpio, tiempo_inicial, tiempo_final, marcador, patron + "-" + select_pivote.get(), patron + "-" + cuadro_vector1["text"], patron + "-" + cuadro_vector2["text"])
+            # Limpiar el Frame antes de agregar el nuevo gráfico
+            for widget in canvas_frame.winfo_children():
+                widget.destroy()
+
+            # Crear el widget Tkinter para mostrar el nuevo gráfico
+            canvas = FigureCanvasTkAgg(fig, master=canvas_frame)
+            canvas_widget_actualizar = canvas.get_tk_widget()
+            canvas_widget_actualizar.config(width=750, height=350)  # Ajustar el tamaño del widget del lienzo
+            canvas_widget_actualizar.pack()
+
+            centrar_ventana(root,1350,650)
+
+            # Mostrar el nuevo gráfico
+            canvas.draw()
+
+        else:
+            # Si no se ingresaron valores de tiempo, mostrar un mensaje de error
+            print("Error: Ingrese valores de tiempo")
+
 
     def calcular_angulo():
         marcador_pivote = patron + "-" + select_pivote.get()
@@ -326,9 +354,9 @@ def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
     boton_calcular = tk.Button(container1, text="Calcular parámetros", command=calcular_parametros, relief=tk.RAISED)
     boton_calcular.pack(pady=10)
 
-    # Botón para actualizar el video
-    ver_video_button = tk.Button(container2, text="Ver Video")
-    ver_video_button.pack(padx=100)
+    # #CONTAINER 2
+    label_grafico = tk.Label(container2, text="Gráfico", font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_grafico.pack(pady= 8)
 
     # Tercer contenedor dividido en dos secciones
     seccion_arriba = tk.Frame(container3,bg=BACKGROUND_COLOR)
@@ -342,19 +370,19 @@ def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
     label_parametros.pack(pady= 8)
 
     # Label "Desplazamiento" y cuadro de texto para mostrar el resultado del cálculo
-    label_desplazamiento = tk.Label(seccion_arriba, text="Desplazamiento:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_desplazamiento = tk.Label(seccion_arriba, text="Desplazamiento total:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_desplazamiento.pack(pady=(1,0))
     cuadro_desplazamiento = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)  # Mostrar el resultado
     cuadro_desplazamiento.pack()
 
     # Label "Velocidad" y cuadro de texto (puede estar vacío o con un valor inicial)
-    label_velocidad = tk.Label(seccion_arriba, text="Velocidad:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_velocidad = tk.Label(seccion_arriba, text="Velocidad final:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_velocidad.pack(pady=(10,0))
     cuadro_velocidad = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_velocidad.pack()
 
     # Label "Aceleración" y cuadro de texto (puede estar vacío o con un valor inicial)
-    label_aceleracion = tk.Label(seccion_arriba, text="Aceleración:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
+    label_aceleracion = tk.Label(seccion_arriba, text="Aceleración final:",font=("Arial", 11, "bold"),bg=BACKGROUND_COLOR)
     label_aceleracion.pack(pady=(10,0))
     cuadro_aceleracion = tk.Label(seccion_arriba, text="",bg=BACKGROUND_COLOR)
     cuadro_aceleracion.pack()
@@ -379,7 +407,6 @@ def mostrar_interfaz(root_to_destroy, archivo_csv_cargado):
     global marcadores_pivote
     marcadores_pivote = parametros.diccionario_pivotes()
     lista_pivote = list(marcadores_pivote.keys())
-    #pivotes = [elemento.replace(patron+"-", "") for elemento in lista_pivote]
 
     # Select pivote
     select_pivote = tk.StringVar(root)
