@@ -28,12 +28,14 @@ class BvhJoint:
 
 
 class Bvh:
-    def __init__(self):
+    def __init__(self, data=None):
         self.joints = {}
         self.root = None
         self.keyframes = None
         self.frames = 0
         self.fps = 0
+        if data:
+            self.parse_string(data)
 
     def _parse_hierarchy(self, text):
         lines = re.split('\\s*\\n+\\s*', text)
@@ -264,17 +266,22 @@ class Bvh:
         with open(path, 'r') as f:
             self.parse_string(f.read())
 
-    def plot_all_frames(self,start_frame, end_frame, save_path="animation.mp4"):
+
+    def plot_all_frames(self, save_path="animation.mp4"):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import axes3d, Axes3D
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        
+
+        print("Configurando la animación...")
         writer = FFMpegWriter(fps=self.fps)
         with writer.saving(fig, save_path, 100):
-            for i in range(start_frame, end_frame + 1):
+            for i in range(self.frames):
                 self.plot_frame(i, fig, ax)
+                print(f"Visualizando el fotograma {i + 1}/{self.frames}")
                 writer.grab_frame()
+
+        print("Guardando la animación completa...")
         '''
         for i in range(start_frame, end_frame + 1): #self.frames):
             self.plot_frame(i, fig, ax)
@@ -282,7 +289,7 @@ class Bvh:
         
     def __repr__(self):
         return f"BVH {len(self.joints.keys())} joints, {self.frames} frames"
-
+'''
 
 if __name__ == '__main__':
     # create Bvh parser
@@ -308,5 +315,5 @@ if __name__ == '__main__':
     #anim.plot_frame(1322)
 
     # show full animation con rangos específicos
-    anim.plot_all_frames(900,1720, save_path='animacion.mp4')
-    
+    anim.plot_all_frames(save_path='animacion.mp4')
+'''

@@ -44,14 +44,17 @@ def cargar_csv():
 
 
 def cargar_bvh():
-    # Mostrar el cuadro de diálogo para seleccionar un archivo
     file_path = filedialog.askopenfilename(filetypes=[("BVH Files", "*.bvh")])
 
     if file_path:
-        # Leer el archivo BVH seleccionado utilizando la biblioteca bvh
         with open(file_path, 'r') as bvh_file:
-            bvh_data = Bvh(bvh_file.read())
+            bvh_data = lectorbvh.Bvh(bvh_file.read())
         print("Archivo BVH cargado exitosamente:", file_path)
+
+        
+        # Llamar a la función plot_all_frames del módulo lectorbvh
+        bvh_data.plot_all_frames(save_path='animacion.mp4')
+
         return bvh_data
     else:
         print("No se seleccionó ningún archivo BVH.")
@@ -64,7 +67,7 @@ def mostrar_modal():
     container = tk.Frame(modal,bg=BACKGROUND_COLOR)
     container.pack(fill='x', expand=True)
 
-    mensaje = tk.Label(container, text="Por favor, carga un archivo CSV para comenzar.", font=("Arial", 11, "bold"), bg=BACKGROUND_COLOR)
+    mensaje = tk.Label(container, text="Por favor, carga un archivo CSV y BVH para comenzar.", font=("Arial", 11, "bold"), bg=BACKGROUND_COLOR)
     mensaje.pack(pady=5, padx=5)
 
     # Crear un objeto Style para usarlo en el botón
@@ -75,7 +78,7 @@ def mostrar_modal():
     button_style.configure('BotonEstilo.TButton', foreground='black', background='#4caf50', font=('Arial', 9, 'bold'))
 
     # Crear el botón con el estilo personalizado
-    boton_cargar = ttk.Button(container, text="Cargar Archivo", command=lambda: iniciar_interfaz(modal), style='BotonEstilo.TButton')
+    boton_cargar = ttk.Button(container, text="Añadir Archivo CSV", command=lambda: iniciar_interfaz(modal), style='BotonEstilo.TButton')
     boton_cargar.pack(pady=5)
 
     # Crear el botón para cargar archivos BVH
