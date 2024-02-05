@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from tkinter import messagebox
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+import mplcursors
 
 #El cleaning funciona para un Rigid Body de 36 marcadores, si se usa mas marcadores modificar variable columnas_innecesarias
 def cleaning(df):
@@ -258,3 +261,104 @@ def error_angulo(vector1,vector2, delta_punto, delta_mag1, delta_mag2):
                      + (punto)**2 * (delta_mag2)**2 / magnitud_v2**2))**0.5
     
     return error_angulo
+
+def graficar_parametros(df, tiempo_inicial, tiempo_final, marcador, marcador_pivote, marcador_vector1, marcador_vector2):
+    tiempo_inicial_dt = datetime.strptime(tiempo_inicial, '%M:%S:%f')
+    tiempo_final_dt = datetime.strptime(tiempo_final, '%M:%S:%f')
+
+    # Obtener datos del marcador en el rango de tiempo
+    posiciones_tiempo = []
+    posiciones_tiempo_angulos = []
+
+    current_time = tiempo_inicial_dt
+    while current_time <= tiempo_final_dt:
+        tiempo_str = current_time.strftime('%M:%S:%f')[:-4]
+        posicion_tiempo = obtener_datos_marcador_tiempo(df, marcador, tiempo_str)
+        posicion_tiempo_angulos = {
+            'pivote': obtener_datos_marcador_tiempo(df, marcador_pivote, tiempo_str),
+            'vector1': obtener_datos_marcador_tiempo(df, marcador_vector1, tiempo_str),
+            'vector2': obtener_datos_marcador_tiempo(df, marcador_vector2, tiempo_str)
+        }
+
+        if posicion_tiempo and posicion_tiempo_angulos:
+            posiciones_tiempo.append(posicion_tiempo)
+            posiciones_tiempo_angulos.append(posicion_tiempo_angulos)
+            
+
+        current_time += timedelta(milliseconds=40)
+
+    # Crear listas para almacenar los resultados de la función calcular_parametros
+    desplazamientos = []
+    velocidades = []
+    aceleraciones = []
+    angulos = []
+
+    # Calcular desplazamiento, velocidad y aceleración para cada instante de tiempo en el rango
+    for i in range(1, len(posiciones_tiempo)):
+
+        desplazamiento, velocidad, aceleracion = calcular_parametros(posiciones_tiempo[0], posiciones_tiempo[i], marcador)
+        desplazamientos.append(desplazamiento)
+        velocidades.append(velocidad)
+        aceleraciones.append(aceleracion)
+
+        angulo = calcular_angulo(
+            posiciones_tiempo_angulos[i]['pivote'],
+            posiciones_tiempo_angulos[i]['vector1'],
+            posiciones_tiempo_angulos[i]['vector2']
+        )
+        angulos.append(angulo)
+
+    # Crear el tiempo correspondiente a cada instante
+    tiempos = [posicion[marcador][3] for posicion in posiciones_tiempo[1:]]  # Utilizar todas las posiciones excepto la primera
+    # Crear el tiempo correspondiente a cada instante
+    tiempos_angulo = [posicion['pivote'][marcador_pivote][3] for posicion in posiciones_tiempo_angulos[1:]]
+
+    # Crear el gráfico con ejes verticales independientes
+    fig, ax1 = plt.subplots(figsize=(4, 3))
+    # Ajustar los límites del eje x para acortar el lado derecho
+    ax1.set_xlabel('Tiempo (s)', fontsize=8)
+
+    # Graficar desplazamiento y configurar el primer eje
+    linea_desplazamiento = ax1.plot(tiempos, desplazamientos, color='blue', label='Desplazamiento')[0]
+    ax1.tick_params(axis='both', labelcolor='blue', labelsize=7.5)
+
+    # Crear ejes gemelos para velocidad y aceleración
+    ax2 = ax1.twinx()
+    ax3 = ax1.twinx()
+    ax4 = ax1.twinx()
+
+    # Mover el eje de aceleración hacia la derecha para evitar superposiciones
+    #ax3.spines['right'].set_position(('outward', 30))
+
+    # Graficar velocidad y aceleración en los ejes gemelos
+    linea_velocidad = ax2.plot(tiempos, velocidades, color='green', label='Velocidad')[0]
+    ax2.tick_params(axis='y', labelcolor='green', labelsize=7.5)
+
+    linea_aceleracion = ax3.plot(tiempos, aceleraciones, color='red', label='Aceleración')[0]
+    ax3.tick_params(axis='y', labelcolor='red', labelsize=7.5)
+
+    # Calcular ángulos y configurar el eje para el ángulo
+    #tiempos_angulo, angulos = calcular_angulos_en_el_tiempo(df, tiempo_inicial, tiempo_final, marcador_pivote, marcador_vector1, marcador_vector2)
+    linea_angulo = ax4.plot(tiempos_angulo, angulos, color='orange', label='Ángulo')[0]
+    ax4.tick_params(axis='y', labelcolor='orange', labelsize=7.5)
+    #ax4.spines['left'].set_position(('outward', 30))
+
+    # Mover los ejes de velocidad y aceleración hacia la izquierda
+    # ax2.spines['left'].set_position(('outward', 30))
+    ax3.spines['right'].set_position(('outward', 30))
+    ax4.spines['right'].set_position(('outward', 60))
+
+
+
+    # Unir todas las líneas en una sola leyenda
+    lines = [linea_desplazamiento, linea_velocidad, linea_aceleracion, linea_angulo]
+    labels = [line.get_label() for line in lines]
+    ax1.legend(lines, labels, fontsize=7)
+
+    fig.subplots_adjust(right=0.83,left=0.05)
+    mplcursors.cursor(hover=True)
+
+
+    plt.grid(True)
+    return fig
+
